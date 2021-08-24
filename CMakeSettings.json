@@ -18,6 +18,7 @@
       "rsyncCommandArgs": "-t --delete --delete-excluded",
       "remoteCopyBuildOutput": false,
       "remoteCopySourcesMethod": "rsync",
+      "addressSanitizerEnabled": true,
       "variables": []
     }
   ]

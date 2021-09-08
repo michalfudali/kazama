@@ -13,8 +13,8 @@
 using asio::ip::tcp;
 using namespace std::placeholders;
 
-constexpr uint16_t kport = 18;
-constexpr unsigned int ktimeout = 60;
+uint16_t kPort = 18;
+constexpr unsigned int kTimeout = 60;
 
 class TcpConnection
     : public std::enable_shared_from_this<TcpConnection> {
@@ -35,7 +35,7 @@ class TcpConnection
     // ,,The total length of the message shall be less than 512 octets."
     auto read_buffer = std::make_shared<std::vector<uint8_t>>(std::vector<uint8_t>(511));
 
-    timer_.expires_after(std::chrono::seconds(ktimeout));
+    timer_.expires_after(std::chrono::seconds(kTimeout));
 
     asio::async_read(
         socket_,
@@ -145,14 +145,33 @@ class TcpServer {
  public:
   explicit TcpServer(asio::io_context &io_context)
       : io_context_(io_context),
-        acceptor_(io_context, tcp::endpoint(tcp::v4(), kport)) {
+        acceptor_(io_context, tcp::endpoint(tcp::v4(), kPort)) {
     WaitForConnection();
   }
 };
 
-int main() {
+void ProcessArguments(const int argc, const char *const argv[]) {
+  for (int i = 1; i < argc; i++) {
+    std::string argument = argv[i];
+    std::stringstream next_argument;
+
+    if (i < argc - 1) {
+      if (argument == "-p") {
+        next_argument << argv[i + 1];
+        next_argument >> kPort;
+        std::cout << "We will listen on port " << kPort << ".\n";
+      }
+
+      i++;
+    }
+  }
+}
+
+int main(int argc, char *argv[]) {
+  ProcessArguments(argc, argv);
+
   asio::io_context io_context;
   TcpServer server(io_context);
-  std::cout << "Starting listening on port " << kport << ".\n";
+  std::cout << "Starting listening on port " << kPort << ".\n";
   io_context.run();
 }

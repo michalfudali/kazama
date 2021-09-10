@@ -54,14 +54,15 @@ class TcpConnection
       std::cout << "We have read the data from the client!\n";
       read_buffer->resize(bytes_transferred);
 
-      auto buffer = std::make_shared<std::vector<uint8_t>>('+', 1);
+      auto buffer = std::make_shared<std::vector<uint8_t>>();
 
       try {
         Message message(*read_buffer);
         DeliverMessage(message);
+        buffer->emplace_back('+');
       } catch (const std::exception &message_error) {
         const std::string message = message_error.what();
-        buffer->at(0) = '-';
+        buffer->emplace_back('-');
         buffer->insert(buffer->end(), message.begin(), message.end() + 1);
       }
 

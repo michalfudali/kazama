@@ -2,7 +2,6 @@
 #include <forward_list>
 #include <functional>
 #include <iomanip>
-#include <iostream>
 #include <ranges>
 
 #include <asio.hpp>
@@ -51,7 +50,6 @@ class TcpConnection
                                 const size_t bytes_transferred,
                                 const std::shared_ptr<std::vector<uint8_t>> read_buffer) {
     if (!read_error) {
-      std::cout << "We have read the data from the client!\n";
       read_buffer->resize(bytes_transferred);
 
       auto buffer = std::make_shared<std::vector<uint8_t>>();
@@ -76,7 +74,6 @@ class TcpConnection
           break;
         }
         default: {
-          std::cout << "Error's occurred when reading: " << read_error.message() << '\n';
           break;
         }
       }
@@ -88,12 +85,11 @@ class TcpConnection
     if (!write_error && bytes_transferred > 0) {
       WaitForMessage();
     } else {
-      std::cout << "Error's occurred when writing: " << write_error.message() << "\n";
+
     }
   }
 
   void CloseConnection() {
-    std::cout << "We are closing the connection.\n";
     socket_.shutdown(asio::ip::tcp::socket::shutdown_both);
     socket_.close();
   }
@@ -101,7 +97,6 @@ class TcpConnection
   void CheckForTimeout() {
 
     if (timer_.expiry() <= asio::steady_timer::clock_type::now()) {
-      std::cout << "Timeout in connection has somewhen expired.\n";
 
       CloseConnection();
     } else {
@@ -111,7 +106,6 @@ class TcpConnection
 
   void HandleTimerExpiry(const std::error_code &error) {
     if (error && error != asio::error::operation_aborted) {
-      std::cout << "Error has occurred when waiting for a timer to expiry.\n";
     } else {
       this->CheckForTimeout();
     }
@@ -131,7 +125,6 @@ class TcpServer {
 
   void StartToServeClient(const std::shared_ptr<TcpConnection> connection,
                           const std::error_code &error_code) {
-    std::cout << "Client has connected to the server.\n";
     if (!error_code) {
       //We have received client's request, and we send WHAT WE WANT back.
       connection->WaitForMessage();
@@ -157,7 +150,6 @@ void ProcessArguments(const int argc, const char *const argv[]) {
       if (argument == "-p") {
         next_argument << argv[i + 1];
         next_argument >> kPort;
-        std::cout << "We will listen on port " << kPort << ".\n";
       }
 
       i++;
@@ -170,6 +162,5 @@ int main(int argc, char *argv[]) {
 
   asio::io_context io_context;
   TcpServer server(io_context);
-  std::cout << "Starting listening on port " << kPort << ".\n";
   io_context.run();
 }

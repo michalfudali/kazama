@@ -48,7 +48,7 @@ class TcpConnection
   asio::steady_timer timer_;
 
   void ReplyWithAcknowledgement(const std::error_code &read_error,
-                                size_t bytes_transferred,
+                                const size_t bytes_transferred,
                                 const std::shared_ptr<std::vector<uint8_t>> read_buffer) {
     if (!read_error) {
       std::cout << "We have read the data from the client!\n";
@@ -136,7 +136,7 @@ class TcpServer {
                           const std::error_code &error_code) {
     std::cout << "Client has connected to the server.\n";
     if (!error_code) {
-      //We have received client's request and we send WHAT WE WANT back.
+      //We have received client's request, and we send WHAT WE WANT back.
       connection->WaitForMessage();
     }
     //Then we are ready to serve another client.

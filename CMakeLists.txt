@@ -11,3 +11,8 @@ target_link_libraries(server Threads::Threads)
 
 find_path(Asio_INCLUDE_DIR asio.hpp REQUIRED)
 target_include_directories(server PRIVATE SYSTEM ${Asio_INCLUDE_DIR})
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    message("Compiling with high optimization level applied.")
+    add_compile_options(-O3)
+endif()

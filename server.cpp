@@ -94,7 +94,6 @@ class TcpConnection
 
   void CloseConnection() {
     std::cout << "We are closing the connection.\n";
-    timer_.cancel();
     socket_.shutdown(asio::ip::tcp::socket::shutdown_both);
     socket_.close();
   }
@@ -105,11 +104,9 @@ class TcpConnection
       std::cout << "Timeout in connection has somewhen expired.\n";
 
       CloseConnection();
-
-      timer_.expires_at(asio::steady_timer::time_point::max());
+    } else {
+      timer_.async_wait(std::bind(&TcpConnection::HandleTimerExpiry, this, _1));
     }
-
-    timer_.async_wait(std::bind(&TcpConnection::HandleTimerExpiry, this, _1));
   }
 
   void HandleTimerExpiry(const std::error_code &error) {

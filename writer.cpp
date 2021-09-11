@@ -45,41 +45,53 @@ class Displayable {
   Displayable(uint8_t line_width) : line_width_(line_width) {}
 
   operator const std::string() {
-    constexpr auto border_character = '+';
+    return FragmentAndBorder(header_, line_width_, '-', true)
+        + FragmentAndBorder(body_, line_width_, '+');
+  }
 
-    std::string border_line(line_width_, border_character);
-    std::string output(border_line + '\n');
+ private:
+  std::string FragmentAndBorder(std::string source, uint8_t max_width,
+                                char border_character, bool omit_border_lines = false) {
 
-    std::istringstream content;
-    content.str(header_ + body_);
+    std::string output;
 
-    for (std::string single_line; std::getline(content, single_line);) {
+    if (!omit_border_lines) {
+      output.append(max_width, border_character);
+      output.push_back('\n');
+    }
+
+    std::istringstream stream;
+    stream.str(source);
+
+    for (std::string single_line; std::getline(stream, single_line);) {
       auto i = 0;
       while (true) {
-        std::string trimmed_line = single_line.substr(i, line_width_ - 4);
+        std::string trimmed_line = single_line.substr(i, max_width - 4);
         std::string decorated_line = border_character + (' ' + trimmed_line);
 
-        auto padding = std::string(line_width_ - decorated_line.size() - 1, ' ');
+        auto padding = std::string(max_width - decorated_line.size() - 1, ' ');
 
         decorated_line += padding + border_character;
 
         output += decorated_line + '\n';
 
-        if (trimmed_line.size() < line_width_ - 4
-            || (trimmed_line.size() == line_width_ - 4 && (i + line_width_ - 4) == single_line.size())) {
+        if (static_cast<uint8_t>(trimmed_line.size()) < max_width - 4 ||
+            (static_cast<uint8_t>(trimmed_line.size()) == max_width - 4
+                && (i + max_width - 4) == static_cast<uint8_t>(single_line.size()))) {
           break;
         } else {
-          i += line_width_ - 4;
+          i += max_width - 4;
         }
       }
     }
 
-    output += border_line + '\n';
+    if (!omit_border_lines) {
+      output.append(max_width, border_character);
+      output.push_back('\n');
+    }
 
     return output;
   }
-
- private:
 };
 
 void WriteMessageToTerminal(const std::vector<uint8_t> &terminal, const std::string &message_body) {
@@ -88,13 +100,15 @@ void WriteMessageToTerminal(const std::vector<uint8_t> &terminal, const std::str
 
   std::fstream terminal_stream(terminal_path.string(), std::ios_base::app);
 
-  terminal_stream << message_body;
+  terminal_stream << "\n\n" << message_body;
+
+  terminal_stream << "Press any key to continue: ";
 }
 
 void DeliverMessage(const Message &message) {
   std::vector<utmpx> logged_users = GetLoggedUsers();
 
-  Displayable prompt(20);
+  Displayable prompt(32);
   prompt.header_ = "New message from " + GetStringFromVector(message.sender_) + ":\n";
   prompt.body_ = GetStringFromVector(message.message_);
 
